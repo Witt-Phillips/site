@@ -1,7 +1,7 @@
 // src/components/P5jsContainer.tsx
 import React, { useEffect, useRef, useState } from "react";
 import { P5jsContainerRef, P5jsSketch } from "../types/global";
-import p5Types from "p5";
+import p5 from "p5";
 
 export const P5jsContainer: React.FC<{ sketch: P5jsSketch }> = ({ sketch }) => {
   const parentRef = useRef<P5jsContainerRef>(null);
@@ -14,19 +14,19 @@ export const P5jsContainer: React.FC<{ sketch: P5jsSketch }> = ({ sketch }) => {
   useEffect(() => {
     if (!isMounted) return;
 
-    let p5instance: p5Types;
+    let p5instance: p5;
 
     const initP5 = async () => {
       try {
-        const p5 = (await import("p5")).default;
-        new p5((p) => {
+        const P5 = (await import("p5")).default;
+        p5instance = new P5((p) => {
           sketch(p, parentRef.current!);
-          p5instance = p;
         });
       } catch (error) {
         console.error(error);
       }
     };
+
     initP5();
 
     return () => {
@@ -35,9 +35,8 @@ export const P5jsContainer: React.FC<{ sketch: P5jsSketch }> = ({ sketch }) => {
   }, [isMounted, sketch]);
 
   return (
-    <div
-      ref={parentRef}
-      className="w-full h-full"
-    ></div>
+    <div ref={parentRef} className="w-full h-full"></div>
   );
 };
+
+export default P5jsContainer;
