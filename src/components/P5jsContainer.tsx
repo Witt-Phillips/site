@@ -14,12 +14,12 @@ export const P5jsContainer: React.FC<{ sketch: P5jsSketch }> = ({ sketch }) => {
   useEffect(() => {
     if (!isMounted) return;
 
-    let p5instance: p5;
+    let p5Instance: p5;
 
     const initP5 = async () => {
       try {
         const P5 = (await import("p5")).default;
-        p5instance = new P5((p) => {
+        p5Instance = new P5((p: p5) => {
           sketch(p, parentRef.current!);
         });
       } catch (error) {
@@ -30,13 +30,11 @@ export const P5jsContainer: React.FC<{ sketch: P5jsSketch }> = ({ sketch }) => {
     initP5();
 
     return () => {
-      if (p5instance) p5instance.remove();
+      if (p5Instance) p5Instance.remove();
     };
   }, [isMounted, sketch]);
 
-  return (
-    <div ref={parentRef} className="w-full h-full"></div>
-  );
+  return <div ref={parentRef} className="w-full h-full"></div>;
 };
 
 export default P5jsContainer;
