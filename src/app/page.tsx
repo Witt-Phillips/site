@@ -7,9 +7,9 @@ import { sketch } from '../sketches/boids/sketch';
 
 const Home: React.FC = () => {
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full h-screen bg-mainGray">
       <P5jsContainer sketch={sketch} />
-      <div className="absolute top-1/2 left-0 px-20 transform -translate-y-1/2 text-left text-white">
+      <div className="absolute bottom-10 ml-40 transform -translate-y-1/2 text-left text-white">
         <h1 className="text-9xl font-bold">Hi there, <br /> I'm Witt.</h1>
       </div>
     </div>
