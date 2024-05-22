@@ -10,6 +10,11 @@ const config: Config = {
     extend: {
       colors: {
         'mainGray': '#323232',
+        // 'darkGray': '#424642',
+        'medGray': '#536162',
+        'porcelain': '#F3F4ED',
+        'rustOrange': '#C06014',
+
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

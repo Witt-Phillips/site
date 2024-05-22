@@ -7,15 +7,16 @@ let foodSpawnInterval: NodeJS.Timeout;
 export const sketch: P5jsSketch = (p5) => {
   let flock: Flock | undefined;
   let foodList: FoodList | undefined;
+  let parentElement: HTMLElement | null = null;
 
   const setupCanvas = () => {
     if (typeof window !== "undefined") {
-      const parentElement = document.getElementById("p5-container");
+      parentElement = document.getElementById("p5-container");
       if (parentElement) {
         p5.createCanvas(parentElement.clientWidth, parentElement.clientHeight).parent(parentElement);
 
         // Initialize the flock
-        flock = new Flock(p5, 10, 2); // Example: 10 prey boids, 5 predator boids
+        flock = new Flock(p5, 10, 2); // Example: 10 prey boids, 2 predator boids
 
         // Initialize FoodList
         foodList = new FoodList(p5, 10, 750);
@@ -42,7 +43,7 @@ export const sketch: P5jsSketch = (p5) => {
   };
 
   p5.draw = () => {
-    p5.background(50);
+    p5.clear(); // Clear the canvas with transparency
 
     // Run and draw the flock
     if (flock && foodList) {
@@ -57,7 +58,7 @@ export const sketch: P5jsSketch = (p5) => {
 
   p5.windowResized = () => {
     if (typeof window !== "undefined") {
-      const parentElement = document.getElementById("p5-container");
+      parentElement = document.getElementById("p5-container");
       if (parentElement) {
         p5.resizeCanvas(parentElement.clientWidth, parentElement.clientHeight);
       }
