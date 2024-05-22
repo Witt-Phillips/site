@@ -1,38 +1,21 @@
-// src/components/P5jsContainer.tsx
-import React, { useEffect, useRef, useState } from "react";
-import { P5jsContainerRef, P5jsSketch } from "../types/global";
+"use client";
+
+import React, { useEffect, useRef } from "react";
 import p5 from "p5";
+import { sketch } from "../sketches/mysketch";
 
-export const P5jsContainer: React.FC<{ sketch: P5jsSketch }> = ({ sketch }) => {
-  const parentRef = useRef<P5jsContainerRef>(null);
-  const [isMounted, setIsMounted] = useState<boolean>(false);
+const P5jsContainer: React.FC = () => {
+  const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setIsMounted(true);
+    if (typeof window !== "undefined" && parentRef.current) {
+      const p5Instance = new p5(sketch, parentRef.current);
+      
+      return () => {
+        p5Instance.remove();
+      };
+    }
   }, []);
-
-  useEffect(() => {
-    if (!isMounted) return;
-
-    let p5Instance: p5;
-
-    const initP5 = async () => {
-      try {
-        const P5 = (await import("p5")).default;
-        p5Instance = new P5((p: p5) => {
-          sketch(p, parentRef.current!);
-        });
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    initP5();
-
-    return () => {
-      if (p5Instance) p5Instance.remove();
-    };
-  }, [isMounted, sketch]);
 
   return <div ref={parentRef} className="w-full h-full"></div>;
 };

@@ -1,17 +1,12 @@
-// src/sketches/mysketch.ts
-import { P5jsSketch } from "../types/global";
+import p5 from "p5";
 
-export const sketch: P5jsSketch = (p5, parentRef) => {
-  p5.setup = () => {
-    p5.createCanvas(parentRef.clientWidth, parentRef.clientHeight).parent(parentRef);
+export const sketch = (p: p5) => {
+  p.setup = () => {
+    p.createCanvas(400, 400);
   };
 
-  p5.windowResized = () => {
-    p5.resizeCanvas(parentRef.clientWidth, parentRef.clientHeight);
-  };
-
-  p5.draw = () => {
-    p5.background(50);
-    p5.circle(p5.width / 2, p5.height / 2, 50);
+  p.draw = () => {
+    p.background(220);
+    p.ellipse(p.width / 2, p.height / 2, 50, 50);
   };
 };
