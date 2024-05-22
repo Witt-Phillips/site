@@ -1,5 +1,3 @@
-import p5 from 'p5';
-
 export const BoidType = {
     PREY: 'prey',
     PREDATOR: 'predator',
@@ -7,20 +5,25 @@ export const BoidType = {
 };
 
 class Boid {
-    /* Utils */
     constructor(p, x, y, type) {
-        // physics
-        this.position = p.createVector(x, y);
-        this.velocity = p.createVector(p.random(1), p.random(1)).setMag(p.random(0.5, 1));
-        this.acceleration = p.createVector();
-        
-        // attributes
+        this.p = p;
+
+        if (typeof window !== "undefined") {
+            this.position = p.createVector(x, y);
+            this.velocity = p.createVector(p.random(1), p.random(1)).setMag(p.random(0.5, 1));
+            this.acceleration = p.createVector();
+        } else {
+            this.position = { x: 0, y: 0 };
+            this.velocity = { x: 0, y: 0 };
+            this.acceleration = { x: 0, y: 0 };
+        }
+
         this.type = type;
         this.color = p.createVector(p.random(255), p.random(255), p.random(255));
         if (this.type == BoidType.PREDATOR) {
             this.color = p.createVector(230, 0, 0);
         }
-        this.size = 15; // proxy for mass
+        this.size = 15;
         if (this.type == BoidType.PREDATOR) {
             this.size = 40;
         }
@@ -29,20 +32,15 @@ class Boid {
         if (this.type == BoidType.PREDATOR) {
             this.maxSpeed = 3.8;
         }
-
         this.perceptionRadius = 80;
         if (this.type == BoidType.PREDATOR) {
             this.perceptionRadius = 120;
         }
-        
-        // shrink functionality. Set shrinkRate = 0 for no decay.
         this.shrinkRate = p.random(0.005, 0.01);
         if (this.type == BoidType.PREDATOR) {
             this.shrinkRate = p.random(0.03, 0.05);
         }
         this.minSize = 8;
-
-        // division
         this.maxSize = 20;
         if (this.type == BoidType.PREDATOR) {
             this.maxSize = 80;
@@ -50,16 +48,18 @@ class Boid {
         if (this.type == BoidType.PLAYER_PREDATOR) {
             this.maxSize = 30;
         }
-
-        // biases
         this.alignmentBias = 1;
         this.cohesionBias = 1;
         this.separationBias = 1;
         this.forageBias = 1;
         this.huntBias = 1;
         this.fleeBias = 2;
+    }
 
-        this.p = p; // store the p5 instance
+    vectorSub(v1, v2) {
+        let x = v1.x - v2.x;
+        let y = v1.y - v2.y;
+        return this.p.createVector(x, y);
     }
 
     remove(flock) {
@@ -77,41 +77,29 @@ class Boid {
         this.velocity.add(this.acceleration).limit(this.maxSpeed);
         this.acceleration.mult(0);
 
-        // shrink & remove if necessary
         this.size -= this.shrinkRate;
         if (this.size < this.minSize) {
             return this.remove(flock);
         }
 
-        // divide if necessary
         if (this.size > this.maxSize) {
             this.size *= 2 / 3;
-            flock.genBoid(this.position.x, this.position.y, this.type); //TODO: give generate boid same coords
+            flock.genBoid(this.position.x, this.position.y, this.type);
         }
         return true;
     }
 
     wrap() {
-        let wrap = false;
-
         if (this.position.x > this.p.width) {
             this.position.x = 0;
-            wrap = true;
         } else if (this.position.x < 0) {
             this.position.x = this.p.width;
-            wrap = true;
         }
 
         if (this.position.y > this.p.height) {
             this.position.y = 0;
-            wrap = true;
         } else if (this.position.y < 0) {
             this.position.y = this.p.height;
-            wrap = true;
-        }
-
-        if (wrap && this.type != BoidType.PREDATOR && this.type != BoidType.PLAYER_PREDATOR) {
-            this.color = this.p.createVector(this.p.random(255), this.p.random(255), this.p.random(255));
         }
     }
 
@@ -124,12 +112,14 @@ class Boid {
         this.p.push();
         this.p.translate(this.position.x, this.position.y);
         this.p.rotate(angle);
-        this.p.triangle(-this.size / 3, this.size / 2, // left
-                        this.size / 3, this.size / 2,  // right
-                        0, -this.size / 2);             // front
+        this.p.triangle(
+            -this.size / 3, this.size / 2,
+            this.size / 3, this.size / 2,
+            0, -this.size / 2
+        );
         this.p.pop();
     }
-  
+
     flock(flock, type = BoidType.PREY) {
         this.acceleration.add(this.align(flock, type).mult(this.alignmentBias));
         this.acceleration.add(this.cohere(flock, type).mult(this.cohesionBias));
@@ -194,7 +184,7 @@ class Boid {
             }
             let dist = this.position.dist(other.position);
             if ((dist < this.perceptionRadius) && (other != this)) {
-                let diff = p5.Vector.sub(this.position, other.position);
+                let diff = this.vectorSub(this.position, other.position);
                 if (dist != 0) {
                     diff.div(dist);
                     steer.add(diff);
@@ -202,7 +192,7 @@ class Boid {
                 i++;
             }
         }
-        
+
         if (i != 0 && steer.mag != 0) {
             steer.div(i);
             steer.setMag(this.maxSpeed);
@@ -223,7 +213,7 @@ class Boid {
                 i++;
             }
         }
-        
+
         if (i != 0) {
             steer.div(i);
             steer.sub(this.color);
@@ -235,7 +225,7 @@ class Boid {
     eat(foodList) {
         for (let food of foodList) {
             let dist = this.position.dist(food.position);
-            
+
             if (food.consumed == false && dist < food.size) {
                 food.consumed = true;
                 this.size += food.size / 2;
@@ -246,36 +236,35 @@ class Boid {
     forage(foodList) {
         let nearestFood = null;
         let nearestDist = Infinity;
-        
+
         for (let food of foodList) {
             let dist = this.position.dist(food.position);
-            
+
             if (dist < this.perceptionRadius && dist < nearestDist) {
                 nearestDist = dist;
                 nearestFood = food.position.copy();
             }
         }
-        
+
         if (nearestFood != null) {
-            let desired = p5.Vector.sub(nearestFood, this.position);
+            let desired = this.vectorSub(nearestFood, this.position);
             desired.setMag(this.maxSpeed);
-            let steer = p5.Vector.sub(desired, this.velocity);
+            let steer = this.vectorSub(desired, this.velocity);
             steer.limit(this.maxForce);
             this.acceleration.add(steer.mult(this.forageBias));
         }
     }
-  
+
     hunt(flock) {
         let nearestBoid = null;
         let nearestDist = Infinity;
-        
+
         for (let boid of flock) {
             if (boid.type == BoidType.PREDATOR || boid.type == BoidType.PLAYER_PREDATOR || this == boid) {
                 continue;
             }
             let dist = this.position.dist(boid.position);
-            
-            // consume boid & return
+
             if (dist < this.size / 2) {
                 this.size += boid.size;
                 let idx = flock.indexOf(boid);
@@ -284,23 +273,22 @@ class Boid {
                 }
                 return;
             }
-            
-            // seek prey: determine the nearest prey and steer towards it
+
             if (boid != this && dist < this.perceptionRadius && dist < nearestDist) {
                 nearestDist = dist;
                 nearestBoid = boid.position.copy();
             }
         }
-        
+
         let desired;
         if (nearestBoid != null) {
-            desired = p5.Vector.sub(nearestBoid, this.position);
+            desired = this.vectorSub(nearestBoid, this.position);
         } else {
             desired = this.p.createVector(this.p.random(1), this.p.random(1));
         }
-    
+
         desired.setMag(this.maxSpeed);
-        let steer = p5.Vector.sub(desired, this.velocity);
+        let steer = this.vectorSub(desired, this.velocity);
         steer.limit(this.maxForce);
         this.acceleration.add(steer);
     }
@@ -308,14 +296,14 @@ class Boid {
     flee(flock) {
         let steer = this.p.createVector();
         let i = 0;
-    
+
         for (let other of flock) {
             if (other.type == BoidType.PREY) {
                 continue;
             }
             let dist = this.position.dist(other.position);
             if ((dist < this.perceptionRadius) && (other != this)) {
-                let diff = p5.Vector.sub(this.position, other.position);
+                let diff = this.vectorSub(this.position, other.position);
                 if (dist != 0) {
                     diff.div(dist);
                     steer.add(diff);
@@ -323,7 +311,7 @@ class Boid {
                 i++;
             }
         }
-        
+
         if (i != 0 && steer.mag != 0) {
             steer.div(i);
             steer.setMag(this.maxSpeed);
@@ -335,7 +323,7 @@ class Boid {
 
     handleInput() {
         let steer = this.p.createVector();
-    
+
         if (this.p.keyIsDown(this.p.LEFT_ARROW)) {
             steer.add(this.p.createVector(-1, 0));
         }
@@ -348,7 +336,7 @@ class Boid {
         if (this.p.keyIsDown(this.p.DOWN_ARROW)) {
             steer.add(this.p.createVector(0, 1));
         }
-    
+
         if (steer.mag > 0) {
             steer.setMag(this.maxSpeed);
             steer.sub(this.velocity);
@@ -363,8 +351,7 @@ class Boid {
                 continue;
             }
             let dist = this.position.dist(boid.position);
-            
-            // consume boid & return
+
             if (dist < this.size / 2) {
                 this.size += boid.size;
                 let idx = flock.indexOf(boid);
@@ -375,6 +362,7 @@ class Boid {
             }
         }
     }
-}    
+}
 
 export default Boid;
+

@@ -1,6 +1,6 @@
 import p5 from "p5";
 
-export const sketch = (p: p5) => {
+export const sketch: (p: p5) => void = (p: p5) => {
   p.setup = () => {
     p.createCanvas(400, 400);
   };

@@ -1,61 +1,66 @@
 import { P5jsSketch } from "../../types/global";
-import FoodList from './foodList.js';
-import Flock from './flock.js';
-import {BoidType} from './boid.js'; // Ensure BoidType is exported from boid.js
+import Flock from "./flock";
+import FoodList from "./foodList";
 
 let foodSpawnInterval: NodeJS.Timeout;
-let previousTick: number;
 
-export const sketch: P5jsSketch = (p5, parentRef) => {
-  let foodList: FoodList;
-  let flock: Flock;
+export const sketch: P5jsSketch = (p5) => {
+  let flock: Flock | undefined;
+  let foodList: FoodList | undefined;
 
-  p5.setup = () => {
-    p5.createCanvas(parentRef.clientWidth, parentRef.clientHeight).parent(parentRef);
+  const setupCanvas = () => {
+    if (typeof window !== "undefined") {
+      const parentElement = document.getElementById("p5-container");
+      if (parentElement) {
+        p5.createCanvas(parentElement.clientWidth, parentElement.clientHeight).parent(parentElement);
 
-    // Initialize FoodList and Flock
-    foodList = new FoodList(p5, 10, 750);
-    flock = new Flock(p5, 10, 0); // Example initialization
-    setFoodSpawnInterval(foodList.tick);
-    previousTick = foodList.tick;
-  };
+        // Initialize the flock
+        flock = new Flock(p5, 10, 2); // Example: 10 prey boids, 5 predator boids
 
-  p5.draw = () => {
-    p5.background(50);
-    // Update food spawn tick if changed
-    let currentTick = 750; // Example value, update based on your slider logic
-    if (currentTick !== previousTick) {
-      foodList.tick = currentTick;
-      setFoodSpawnInterval(foodList.tick);
-      previousTick = currentTick;
-    }
-
-    // Run simulation
-    flock.run(foodList, 1, 1, 1, 2, 1, 1); // Example values for sliders
-    // Update food
-    foodList.run();
-  };
-
-  p5.mousePressed = () => {
-    if (p5.keyIsDown(p5.SHIFT)) {
-      flock.genBoid(p5.mouseX, p5.mouseY, BoidType.PREDATOR);
-    } else if (p5.keyIsDown(32)) { // 32 is the keyCode for spacebar
-      flock.genBoid(p5.mouseX, p5.mouseY, BoidType.PLAYER_PREDATOR);
-    } else {
-      flock.genBoid(p5.mouseX, p5.mouseY, BoidType.PREY);
+        // Initialize FoodList
+        foodList = new FoodList(p5, 10, 750);
+        setFoodSpawnInterval(foodList.tick);
+      } else {
+        requestAnimationFrame(setupCanvas);
+      }
     }
   };
 
-  p5.windowResized = () => {
-    p5.resizeCanvas(parentRef.clientWidth, parentRef.clientHeight);
-  };
-
-  function setFoodSpawnInterval(tick: number) {
+  const setFoodSpawnInterval = (tick: number) => {
     if (foodSpawnInterval) {
       clearInterval(foodSpawnInterval);
     }
     foodSpawnInterval = setInterval(() => {
-      foodList.add();
+      if (foodList) {
+        foodList.add();
+      }
     }, tick);
-  }
+  };
+
+  p5.setup = () => {
+    setupCanvas();
+  };
+
+  p5.draw = () => {
+    p5.background(50);
+
+    // Run and draw the flock
+    if (flock && foodList) {
+      flock.run(foodList, 1, 1, 1, 2, 1, 1); // Example values for alignment, cohesion, separation, etc.
+    }
+
+    // Run and draw the food list
+    if (foodList) {
+      foodList.run();
+    }
+  };
+
+  p5.windowResized = () => {
+    if (typeof window !== "undefined") {
+      const parentElement = document.getElementById("p5-container");
+      if (parentElement) {
+        p5.resizeCanvas(parentElement.clientWidth, parentElement.clientHeight);
+      }
+    }
+  };
 };
