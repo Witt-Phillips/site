@@ -24,7 +24,7 @@ const Home: React.FC = () => {
     {/* second page */}
     <div className="w-full h-[50vh] flex justify-center items-center bg-inherit">
       <div className="text-center text-porcelain">
-        <h2 className="text-5xl font-bold">I'm a student, researcher, <br /> and lover of ridiculous socks.</h2>
+        <h2 className="text-5xl font-bold">I&apos;m a student, researcher, <br /> and lover of ridiculous socks.</h2>
       </div>
     </div>
   </div>
